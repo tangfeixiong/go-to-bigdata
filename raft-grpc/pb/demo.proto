@@ -1,0 +1,10 @@
+syntax = "proto3";
+package pb;
+
+import "raftpb/raft.proto";
+
+message DemoReqResp {
+    repeated raftpb.Message demo_messages = 1;
+	int32 state_code = 2;
+	string state_message = 3;
+}

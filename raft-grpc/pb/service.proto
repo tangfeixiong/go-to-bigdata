@@ -1,0 +1,15 @@
+syntax = "proto3";
+package pb;
+
+import "google/api/annotations.proto";
+
+import "pb/demo.proto";
+
+service RaftReplicaService {
+  rpc Demo(pb.DemoReqResp) returns (pb.DemoReqResp) {
+    option (google.api.http) = {
+	  post: "/v1/demo"
+      body: "*"
+    };
+  }
+}
