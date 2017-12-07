@@ -1,0 +1,26 @@
+{
+	"ImportPath": "github.com/tangfeixiong/go-to-bigdata",
+	"GoVersion": "go1.9",
+	"GodepVersion": "v79",
+	"Packages": [
+		"github.com/onsi/ginkgo/ginkgo",
+		"github.com/jteeuwen/go-bindata/go-bindata",
+		"github.com/tools/godep",
+		"./..."
+	],
+	"Deps": [
+		{
+			"ImportPath": "github.com/syndtr/goleveldb",
+			"Rev": "adf24ef3f94bd13ec4163060b21a5678f22b429b"
+		},
+		{
+			"ImportPath": "github.com/tecbot/gorocksdb",
+			"Rev": "7f3911bacdd40de2e1952136124bfac86b810948"
+		},
+		{
+			"ImportPath": "github.com/xiang90/probing",
+			"Comment": "0.0.1",
+			"Rev": "07dd2e8dfe18522e9c447ba95f2fe95262f63bb2"
+		}
+    ]
+}
