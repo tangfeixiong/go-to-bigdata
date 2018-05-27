@@ -1,0 +1,29 @@
+syntax = "proto3";
+package pb;
+
+import "google/api/annotations.proto";
+
+//import "pb/not-existed.proto";
+import "pb/datadef.proto";
+
+service SimpleGRpcService {
+    rpc CreateContact (ContactReqResp) returns (ContactReqResp) {
+        option (google.api.http) = {
+	        post: "/api/v1/contacts"
+            body: "*"
+        };
+    }
+	
+    rpc ReapContact (ContactReqResp) returns (ContactReqResp) {
+        option (google.api.http) = {
+	        get: "/api/v1/contacts"
+        };
+    }
+}
+
+message ContactReqResp {
+	Recipient recipe = 1;
+	int32 state_code = 2;
+	string state_message = 3;
+}
+

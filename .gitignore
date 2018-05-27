@@ -5,6 +5,8 @@ bin/
 bin-debug/
 bin-release/
 
+.vagrant/
+
 # Other files and folders
 .settings/
 
