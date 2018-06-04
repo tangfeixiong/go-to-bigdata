@@ -14,15 +14,21 @@ import (
 
 	// "k8s.io/kubernetes/pkg/util/rand"
 
-	"github.com/tangfeixiong/go-to-bigdata/nta/pkg/hbase"
 	"github.com/tangfeixiong/go-to-bigdata/nta/pkg/server"
+	agentserver "github.com/tangfeixiong/go-to-bigdata/nta/pkg/server/agent/app"
+	"github.com/tangfeixiong/go-to-bigdata/nta/pkg/server/config"
 	"github.com/tangfeixiong/go-to-bigdata/pkg/util/homedir"
 )
 
-func RootCommandFor(name string) *cobra.Command {
-	var config server.Config
+func RootCommandFor(name string, stopCh <-chan struct{}) *cobra.Command {
+	var cfg config.Config
 	// in, out, errout := os.Stdin, os.Stdout, os.Stderr
-	cfg := &config.HBase
+	collectorcfg := &service.Config{
+		Common: &cfg,
+	}
+	agentcfg := &agent.Config{
+		Common: &cfg,
+	}
 
 	root := &cobra.Command{
 		Use:   name,
@@ -35,62 +41,63 @@ func RootCommandFor(name string) *cobra.Command {
         It is inspired by some github projects.
         `,
 	}
-	root.AddCommand(createCollectorCommand(&config))
-	root.AddCommand(createAgentCommand(cfg))
+	root.AddCommand(createCollectorCommand(collectorcfg, stopCh))
+	root.AddCommand(createAgentCommand(agentcfg, stopCh))
 
 	root.PersistentFlags().StringVar(&cfg.Kubeconfig, "kubeconfig", "", "absolute path to the kubeconfig file. it means running out of cluster if supplied")
 	if home := homedir.HomeDir(); home != "" {
 		root.PersistentFlags().Lookup("kubeconfig").NoOptDefVal = filepath.Join(home, ".kube", "config")
 	}
+	root.PersistentFlags().IntVar(&cfg.LogLevel, "log_level", 2, "for glog")
 	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
+
+	command.Flags().StringVar(&cfg.HttpAddress, "http_addr", "0.0.0.0:10016", "IP:port format. Serve HTTP, or No HTTP if empty")
+	command.Flags().StringVar(&cfg.GrpcAddress, "grpc_addr", "0.0.0.0:10017", "IP:port format")
+	command.Flags().BoolVar(&cfg.SecureProtocol, "secure_protocol", false, "Currently not used, if both HTTP address and HTTPS flag not set, just gRPC noly")
 
 	return root
 }
 
-func createCollectorCommand(config *server.Config) *cobra.Command {
+func createCollectorCommand(cfg *server.Config, stopCh <-chan struct{}) *cobra.Command {
 
 	command := &cobra.Command{
 		Use:   "collect",
 		Short: "Serving with gRPC and a gRPC-Gateway",
 		Run: func(cmd *cobra.Command, args []string) {
 			// pflag.Parse()
-			flag.Set("v", strconv.Itoa(config.LogLevel))
+			flag.Set("v", strconv.Itoa(cfg.Common.LogLevel))
 			flag.Parse()
-			server.Start(config)
+			server.Start(cfg, stopCh)
 		},
 	}
 
-	command.Flags().StringVar(&config.SecureAddress, "grpc_addr", "0.0.0.0:10001", "IP:port format")
-	command.Flags().StringVar(&config.InsecureAddress, "http_addr", "0.0.0.0:10002", "IP:port format. Serve HTTP, or No HTTP if empty")
-	command.Flags().BoolVar(&config.SecureHTTP, "secure_http", false, "Currently not used, if both HTTP address and HTTPS flag not set, just gRPC noly")
-	command.Flags().IntVar(&config.LogLevel, "log_level", 2, "for glog")
+	//	command.PersistentFlags().StringVar(&config.BaseDomain, "domain", "cluster.local", "Domain of K8s DNS")
+	//	command.PersistentFlags().StringVar(&config.CustomResourceName, "custom_resource", "", "custom resource name")
+	//	command.PersistentFlags().StringVar(&config.ClusterID, "hdfs_cluster_id", "", "HDFS cluster name, auto-creating by default")
+	//	command.PersistentFlags().StringVar(&config.NodeType, "hdfs_node_type", "namenode", "Or datanode")
+	//	command.PersistentFlags().StringVar(&config.Dir, "hadoop_dir", "/hadoop-3.0.0", "Directory of etc")
+	//	command.PersistentFlags().IntVar(&config.Port, "service_port", 9000, "Service port")
 	// command.Flags().AddGoFlagSet(flag.CommandLine)
 
 	return command
 }
 
-func createAgentCommand(config *hbase.Config) *cobra.Command {
+func createAgentCommand(cfg *agent.Config, stopCh <-chan struct{}) *cobra.Command {
 
 	command := &cobra.Command{
 		Use:   "agent",
-		Short: "init configurtions of etc/hadoop/",
+		Short: "Serving with gRPC",
 		Run: func(cmd *cobra.Command, args []string) {
 			// pflag.Parse()
-			flag.Set("v", strconv.Itoa(config.LogLevel))
+			flag.Set("v", strconv.Itoa(cfg.LogLevel))
 			flag.Parse()
 
-			server.StartAgent(config)
+			agentserver.Start(cfg, stopCh)
 		},
 	}
 
-	command.PersistentFlags().StringVar(&config.Name, "name", "", "StatefulSet name, or lookup value via label <crd group>/go-to-kubernetes")
-	command.PersistentFlags().StringVar(&config.ServiceName, "service", "", "Kubernetes Service object name")
-	command.PersistentFlags().StringVar(&config.Namespace, "namespace", "", "Kubernetes namespace, or lookup value from env name POD_NAMESPACE, otherwise 'default'")
-	command.PersistentFlags().StringVar(&config.BaseDomain, "domain", "cluster.local", "Domain of K8s DNS")
-	command.PersistentFlags().StringVar(&config.CustomResourceName, "custom_resource", "", "custom resource name")
-	command.PersistentFlags().StringVar(&config.ClusterID, "hdfs_cluster_id", "", "HDFS cluster name, auto-creating by default")
-	command.PersistentFlags().StringVar(&config.NodeType, "hdfs_node_type", "namenode", "Or datanode")
-	command.PersistentFlags().StringVar(&config.Dir, "hadoop_dir", "/hadoop-3.0.0", "Directory of etc")
-	command.PersistentFlags().IntVar(&config.Port, "service_port", 9000, "Service port")
+	command.Flags().StringVar(&cfg.Name, "name", "", "Unique agent name to identify a worker process")
+	command.Flags().StringVar(&cfg.RemoteGrpc, "remote_grpc", "127.0.0.1:10017", "Kubernetes Service object name")
+	command.Flags().BoolVar(&cfg.SecureRemote, "secure_transport", false, "Kubernetes namespace, or lookup value from env name POD_NAMESPACE, otherwise 'default'")
 	return command
 }

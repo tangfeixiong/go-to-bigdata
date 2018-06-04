@@ -1,0 +1,37 @@
+syntax = "proto3";
+package pb;
+
+message Destination {
+	string ip_v4 = 1;
+	int32 port = 5;
+}
+
+message Link {
+    message Stage {
+	    Destination target = 1;
+        repeated Destination sources = 2;	
+    }
+
+	map<string, Stage> stages = 1;
+}
+
+message XLStats {
+	string command = 1;
+	
+	message Stat {
+		string from = 1;
+		string to = 2;
+		string attack_type =3;
+		string attack_name = 4;
+		int32 time = 5;
+		string data = 6;
+		int32 data_size = 7;
+		int32 port = 8;
+		string protocol = 9;
+	}
+	
+	message Stats {
+		repeated Stat list = 1;
+	}
+	Stats attackdata = 2;
+}

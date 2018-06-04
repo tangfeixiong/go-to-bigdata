@@ -1,0 +1,38 @@
+syntax = "proto3";
+package pb;
+
+import "google/api/annotations.proto";
+
+import "pb/data.proto";
+
+service NpsWssService {
+  rpc LinkStatsCreation(LinkReqResp) returns (LinkReqResp) {
+    option (google.api.http) = {
+	  post: "/api/v1/links"
+      body: "*"
+    };
+  }
+
+  rpc NetFlowStats(StatsReqResp) returns (StatsReqResp) {
+    option (google.api.http) = {
+	  get: "/api/v1/stats"
+      //body: "*"
+    };	
+  }
+}
+
+message LinkReqResp {
+	string id = 1;
+	string name = 2;
+	string namespace = 3;
+    pb.Link link = 4;
+	int32 state_code = 5;
+	string state_message = 6;
+}
+
+message StatsReqResp {
+    pb.XLStats xlstats = 1;
+	int32 state_code = 2;
+	string state_message = 3;
+}
+

@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>玄鸟卫士网络信息安全攻防平台</title>
+    <link rel="icon" href="__INDEX__/perception/img/logo.png">
+    <link rel="stylesheet" href="/static/{$compe.skin}/perception/css/defensty.css" id="defensty"/>
+    <link rel="stylesheet" href="__INDEX__/perception/css/TeamInformation.css">
+    <link rel="stylesheet" href="__INDEX__/perception/css/style.css">
+    <link rel="stylesheet" href="__INDEX__/perception/css/header.css">
+    <link rel="stylesheet" href="__INDEX__/perception/css/bootstrap.min.css">
+    <link rel="stylesheet" href="__INDEX__/perception/css/progress-bar.css">
+    <!-- <link rel="stylesheet" href="__INDEX__/css/layui_view.css"> -->
+    <script type="text/javascript" src="__INDEX__/perception/js/jquery-2.1.0.js"></script>
+    <script type="text/javascript" src="__INDEX__/perception/js/jquery.downCount.js"></script>
+    <script type="text/javascript" src='__INDEX__/perception/js/d3.min.js'></script>
+    <script type="text/javascript" src='__INDEX__/perception/js/echarts.min.js'></script>
+    <script type="text/javascript" src="__INDEX__/perception/js/moment.min.js"></script>
+    <script type="text/javascript" src="__INDEX__/perception/js/defenjs.js"></script>
+    <script type="text/javascript" src='__INDEX__/perception/js/myhole.min.js'></script>
+    <script type="text/javascript" src="__INDEX__/perception/js/myholeui.min.js"></script>
+    <script type="text/javascript" src="__INDEX__/perception/js/reconnecting-websocket.min.js"></script>
+    <script type="text/javascript" src='__INDEX__/perception/js/main.js'></script>
+    <script type="text/javascript" src='__INDEX__/perception/js/Answer.js'></script>
+    <script type="text/javascript" src="__INDEX__/perception/js/jquery.nicescroll.js"></script>
+    <script type="text/javascript">
+        $(function () {
+             var wsurl='{$compe.midsocketurl}';
+             Main.init(wsurl);
+        });
+        //重写$.post方法,绑定全局.error
+        var _post = $.post;
+        $.post = function () {
+            _post.apply(this, arguments).error(function (e) {
+                console.error("请求错误 :(");
+                console.error(e);
+            });
+        };
+
+        //左边
+        function pr() {
+            var L = document.getElementById("left");
+            var R = document.getElementById("right");
+            if (L.className == "left") {
+                L.className = "left1";
+                R.className = " ";
+                document.getElementById("right_a").innerText = ">";
+            } else {
+                L.className = "left";
+                R.className = "right";
+                document.getElementById("right_a").innerText = "<";
+            }
+        }
+    </script>
+    
+</head>
+<body>
+    <!--左边隐藏菜单-->
+    <div class="right-box">
+        <div id="left" class="left1">
+            <ul class="tab_menu">
+                <a href="#"><li class="current">攻防态势</li></a>
+                <a href="/index/announcement/index"><li>数据统计</li></a>
+                <a href="/index/dynamic/index"><li >队伍信息</li></a>
+            </ul>
+        </div>
+        <div id="right" class="right">
+            <a id="right_a" class="left-zj">></a>
+        </div>
+    </div>
+
+    <div class="defen_main">
+        <div class="defen_center">
+            <!-- 头部logo区域 -->
+            <div class="layui-top" style="width:100%;height: 85px;display: flex;background: rgba(0,0,0,0.4);">
+                <!-- <p class="left_logo"><img src="img/360logo.png"></p> -->
+                <div class="logo_box" id="compe_info">
+                  
+                </div>
+                <div class="defen_time">
+                    <a>倒计时：</a>
+                    <span id="t_h">时间</span>
+                    <span id="t_i">加载</span>
+                    <span id="t_s">中</span>
+                </div>
+            </div>
+
+            <!--警告-->
+            <div id="wrapper">
+                <div id="horse">
+                </div>
+            </div>
+
+            <!-- 中间星体态势感知部分 -->
+            <div class="canvas_page" id="canvas"></div>
+
+            <!--左边排行榜-->
+            <div class="defen_left">
+                <p class="rankTitle"><img src="__INDEX__/perception/img/RANK.png"></p>
+                <ul class="Ranking_ul">
+                    <!-- <li class="Ranking_li rank_tle">风云排行榜</li> -->
+                    <li class="rank_class">名次</li>
+                    <li class="rank_class">战队</li>
+                    <li class="rank_class">得分</li>
+                    <li class="rank_class">失分</li>
+                    <li class="rank_class">总分</li>
+                    <div class="defen_click"></div>
+                </ul>
+                <a href="javascript:pr4()" id="chartDownl" style="position: absolute;right: 1px;top: 70px;">▲</a>
+                <div class="paihang_adds" id="attack_cout1l">
+                    <div id="finaltoplist" class="paihang_adds_fen_tab fen_tab paihang_scroll">
+                    </div>
+                    <div class="mask"></div>
+                </div>
+            </div>
+
+            <!--右边内容-->
+            <div class="defen_right">
+                <div id="right2" class="leftl2" style="width: auto;">
+                    <a id="right2_a" href="javascript:pr2()" class="left-hide" style="display: block; margin-left: -50px;border:none">▼</a>
+                </div>
+                <div id="left2" class="defen_right_main clear" style="float:right">
+                    <div id="chart1panel" class="attack_right_tow">
+                        <div class="attack_tle">
+                            <h3>队伍情况</h3>
+                        </div>
+                        <div class="img_leida">
+                            <!-- <img src="img/defenimg/leida.png" /> -->
+                            <div id="chart1" style="width: 319px;height: 197px;"></div>
+                        </div>
+                    </div>
+                    <!--攻击成功率统计-->
+                    <!--攻击频率统计-->
+                    <div id="chart2panel" class="attack_right_tow">
+                        <div class="attack_tle">
+                            <span><h3>攻击频率占比</h3></span>
+                        </div>
+                        <div class="img_bingtu">
+                            <!-- <img src="img/defenimg/bingtu.png" /> -->
+                            <div id="chart2" style="width: 319px;height: 220px;"></div>
+                        </div>
+                    </div>
+                    <!--攻击频率统计-->
+                    <!--攻击手段-->
+                    <div class="attack_right_tow">
+                        <div class="attack_tle">
+                            <span><h3>防御成功占比</h3></span>
+                        </div>
+                        <div class="img_zhutu">
+                            <!-- <img src="img/defenimg/bingtu.png" /> -->
+                            <div id="chart3" style="width: 319px;height:250px;"></div>
+                        </div>
+                    </div>
+                    <!--攻击手段-->
+                    <!--攻击成功率统计-->
+                </div>
+            </div>
+
+            <!--中间图表内容-->
+            <div id="chart3panel" class="defen_content clear">
+                <!-- 攻击次数 -->
+                <a href="javascript:pr3()" id="chartDown">▲</a>
+                <div class="attack_cout_sm lf" id="attack_cout1">
+                    <ul class="attack_cout_sm_top clear">
+                        <li>COUNT</li>
+                        <li>ATTACKER</li>
+                    </ul>
+                    <div class="attack_cout_sm_main_sm clear" id="attack_cout_main1"></div>
+                </div>
+                <!-- 攻击数据统计 -->
+                <div class="defen_content_main_sm rt" id="defen_content_main1">
+                    <ul class="attack_top clear">
+                        <li>TIMESTAMP</li>
+                        <li>ATTACKER</li>
+                        <li>ATTACKER IP</li>
+                        <li>TARGET</li>
+                        <li>TARGET IP</li>
+                        <li>PROTOCOLS</li>
+                        <li>PORT</li>
+                        <li>PACKETS</li>
+                    </ul>
+                    <div class="attack_data_sm clear" id="layui-notice-center1">
+                        <div id="attack_con_main"></div>
+                    </div>
+                </div>
+            </div>
+            <!--中间图表内容-->
+            <div class="defen_click"></div>
+            <!-- </div> -->
+            <!--中间内容-->
+        </div>
+    </div>
+    <script>
+        $("#right").mouseover(function(){
+            var L = document.getElementById("left");
+            var R = document.getElementById("right");
+            if (L.className == "left") {
+                L.className = "left1";
+                R.className = " ";
+                document.getElementById("right_a").innerText = ">";
+            } else {
+                L.className = "left";
+                R.className = "right";
+                document.getElementById("right_a").innerText = "<";
+
+            }
+        });
+        // 右边
+        function pr2() {
+            var L = document.getElementById("left2");
+            var R = document.getElementById("right2");
+            if (L.className == "left2") {
+                L.className = "left12";
+                R.className = " ";
+                document.getElementById("right2_a").innerText = "▼";
+            } else {
+                L.className = "left2";
+                R.className = "right2";
+                document.getElementById("right2_a").innerText = "▲";
+            }
+        }
+
+        /*警告栏*/
+        $("#wrapper").delay(14000).fadeOut();
+
+        // 下拉点击效果
+        function pr3(){
+            $(".attack_cout_sm").toggleClass("attack_cout");
+            $(".attack_cout_sm_main_sm").toggleClass("attack_cout_sm_main");
+            $(".defen_content_main_sm").toggleClass("defen_content_main");
+            $(".attack_data_sm").toggleClass("attack_data");
+            if ($("#attack_cout1").hasClass("attack_cout")) {
+                document.getElementById("chartDown").innerText = "▼";
+            }else{
+                document.getElementById("chartDown").innerText = "▲";
+            }
+        }
+
+        function pr4(){
+            $(".paihang_adds").toggleClass("attack_coutl");
+            $(".paihang_adds_fen_tab fen_tab").toggleClass("attack_cout_sm_mainl");
+            if ($("#attack_cout1l").hasClass("attack_coutl")) {
+                document.getElementById("chartDownl").innerText = "▼";
+            }else{
+                document.getElementById("chartDownl").innerText = "▲";
+            }
+        }
+
+        $('.paihang_adds').niceScroll({
+            cursorcolor: "#A6EFFF",//#CC0071 光标颜色
+            cursoropacitymax: 1, //改变不透明度非常光标处于活动状态（scrollabar“可见”状态），范围从1到0
+            touchbehavior: false, //使光标拖动滚动像在台式电脑触摸设备
+            cursorwidth: "4px", //像素光标的宽度
+            cursorborder: "1px", //     游标边框css定义
+            cursorborderradius: "4px",//以像素为光标边界半径
+            autohidemode: false //是否隐藏滚动条
+        });
+        /*数据框展开*/
+        $("#finaltoplist").delegate( 'ul', 'click', function() {
+            $(".mask").css('display','block');
+            $(this).addClass('Score_ul_ul').siblings().removeClass('Score_ul_ul');
+            $(this).next().children().children(0).css('display','block');
+            $(this).next().children().children(1).css('display','block');
+            $(this).next().removeClass('hidden');
+            $(this).next().animate({'width':'770px','right':'-38px'},1500,function(){
+                return $(".bar").each(function(i, elem) {
+                    return $(elem).addClass('active');
+                });
+            });
+            event.stopPropagation();//阻止事件冒泡
+            function xiaoshi(){ 
+                 $(".mask").css('display','none');
+            } 
+            setTimeout(xiaoshi,300000);
+        });
+        $(".mask").css('display','none');
+        $('.mask').bind('click', function(event) {
+            $(".ranks").animate({'width':'0','right':'-38px'},1500,function(){
+                $(".mask").css('display','none');
+                $("#finaltoplist ul").removeClass("Score_ul_ul");
+                $(".div").css('display','none');
+                $(".r-bg-index").css('display','none');
+            });
+            event.stopPropagation();//阻止事件冒泡
+        });
+
+    </script>
+
+
+</body>
+</html>

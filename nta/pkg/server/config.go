@@ -2,12 +2,11 @@ package server
 
 import (
 	"github.com/tangfeixiong/go-to-bigdata/nta/pkg/hbase"
+	"github.com/tangfeixiong/go-to-bigdata/nta/pkg/server/config"
 )
 
 type Config struct {
-	SecureAddress   string
-	InsecureAddress string
-	SecureHTTP      bool
-	LogLevel        int
-	HBase           hbase.Config
+	Common *config.Config
+
+	HBase hbase.Config
 }

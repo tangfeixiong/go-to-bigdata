@@ -1,0 +1,41 @@
+# 2017-11-12
+
+github.com/coreos/etcd  02ae7a30059ddc2edecd4b43634787ab20b7ca5e
+github.com/coreos/go-semver  1817cd4bea52af76542157eeabd74b057d1a199e
+github.com/coreos/go-systemd  d2196463941895ee908e13531a23a39feb9e1243
+github.com/coreos/pkg  459346e834d8e97be707cd0ea1236acaaa159ffc
+
+github.com/go-sql-driver/mysql  fade21009797158e7b79e04c340118a9220c6f9e
+
+github.com/gogo/protobuf  616a82ed12d78d24d4839363e8f3c5d3f20627cf
+
+github.com/golang/glog  23def4e6c14b4da8ac2ed8007337bc5eb5007998
+
+github.com/grpc-ecosystem/grpc-gateway  93cf3eb9e9dfd4c70110a599d5ebecefc233d6f4
+
+github.com/mitchellh/go-homedir  b8bc1bf767474819792c23f32d8286a45736f1c6
+
+
+
+github.com/spf13/cobra  2da4a54c5ceefcee7ca5dd0eea1e18a3b6366489
+github.com/spf13/pflag  4c012f6dcd9546820e378d0bdda4d8fc772cdfea
+github.com/spf13/viper  4dddf7c62e16bce5807744018f5b753bfe21bbd2
+
+
+github.com/syndtr/goleveldb  549b6d6b1c0419617182954dd77770f2e2685ed5
+
+github.com/xiang90/probing  07dd2e8dfe18522e9c447ba95f2fe95262f63bb2
+
+#github.com/golang/net
+golang.org/x/net  a337091b0525af65de94df2eb7e98bd9962dcbe2
+#github.com/golang/oauth2
+golang.org/x/oauth2  9ff8ebcc8e241d46f52ecc5bff0e5a2f2dbef402
+#github.com/golang/text
+golang.org/x/text  88f656faf3f37f690df1a32515b479415e1a6769
+#github.com/golang/time
+golang.org/x/time  6dc17368e09b0e8634d71cac8168d853e869a0c7
+#github.com/golang/tools
+golang.org/x/tools  9c477bae194915bfd4bc8c314e90e28b9ec1c831
+
+#github.com/grpc/grpc-go
+google.golang.org/grpc  de2209a968d48e8970546c8a710189f7461370f7

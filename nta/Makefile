@@ -26,8 +26,8 @@ protoc-grpc:
 		-I${GOPATHD}/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
 		-I${GOPATHD}/src/github.com/gogo/protobuf \
 		-I${GOPATHD}/src \
-		--gogo_out=Mgoogle/api/annotations.proto=github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis/google/api,Mgogoproto/gogo.proto=github.com/gogo/protobuf/gogoproto,Mpb/datadef.proto=$(PB_PKG),plugins=grpc:. \
-		pb/service.proto pb/datadef.proto
+		--gogo_out=Mgoogle/api/annotations.proto=github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis/google/api,Mgogoproto/gogo.proto=github.com/gogo/protobuf/gogoproto,Mpb/datadef.proto=$(PB_PKG),Mpb/meta.proto=$(PB_PKG),Mpb/node.proto=$(PB_PKG),Mpb/resource.proto=$(PB_PKG),Mpb/runtime.proto=$(PB_PKG),plugins=grpc:. \
+		pb/service.proto pb/datadef.proto pb/meta.proto pb/node.proto pb/resource.proto pb/runtime.proto
 	@protoc -I/usr/local/include -I. \
 		-I${GOPATHP}/src \
 		-I${GOPATHD}/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \

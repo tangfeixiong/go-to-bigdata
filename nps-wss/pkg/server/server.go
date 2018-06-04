@@ -2,7 +2,7 @@ package server
 
 import (
 	"fmt"
-	//"mime"
+	"mime"
 	"net"
 	"net/http"
 	"os"
@@ -12,52 +12,55 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/elazarl/go-bindata-assetfs"
 	"github.com/golang/glog"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/philips/grpc-gateway-example/pkg/ui/data/swagger"
 
 	"golang.org/x/net/context"
 
 	"google.golang.org/grpc"
 
-	"github.com/tangfeixiong/go-to-bigdata/nta/pb"
-	"github.com/tangfeixiong/go-to-bigdata/nta/pkg/hbase"
+	"github.com/tangfeixiong/go-to-bigdata/nps-wss/pb"
+	//"github.com/tangfeixiong/go-to-bigdata/nps-wss/pkg/wss"
 )
 
-type Server struct {
+type Config struct {
+	SecureAddress   string
+	InsecureAddress string
+	SecureHTTP      bool
+	LogLevel        int
+}
+
+type controller struct {
 	config *Config
-	//ops    map[string]*operator.Operator
 	root   http.FileSystem
+	//wsnovnc *gowebsockifynovnc.WsnovncManager
 	signal os.Signal
 }
 
-func Start(config *Config, stopCh <-chan struct{}) {
-	s := &Server{
+func Start(config *Config) {
+	ctl := &controller{
 		config: config,
-		//ops:    make(map[string]*operator.Operator),
+		//wsnovnc: &gowebsockifynovnc.WsnovncManager{},
 	}
-	//	op, err := operator.Run(config.RuntimeConfig)
-	//	if err != nil {
-	//		glog.Errorf("Start operator failed: %v", err)
-	//		return
-	//	}
-	//s.ops["hadoop-operator"] = op
-	s.start()
+	ctl.start()
 }
 
-func (s *Server) start() {
+func (ctl *controller) start() {
 	ch := make(chan string)
 	wg := sync.WaitGroup{}
 
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		s.startGRPC(ch)
+		ctl.startGRPC(ch)
 	}()
 
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		s.startGateway(ch)
+		ctl.startGateway(ch)
 	}()
 
 	/*
@@ -66,16 +69,16 @@ func (s *Server) start() {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, os.Kill, syscall.SIGTERM)
 	// Block until a signal is received.
-	s.signal = <-c
+	ctl.signal = <-c
 
 	//wg.Wait()
 }
 
-func (s *Server) startGRPC(ch chan<- string) {
-	gs := grpc.NewServer()
+func (ctl *controller) startGRPC(ch chan<- string) {
+	s := grpc.NewServer()
 
-	pb.RegisterSimpleGRpcServiceServer(gs, s)
-	host := s.config.SecureAddress
+	pb.RegisterNpsWssServiceServer(s, ctl)
+	host := ctl.config.SecureAddress
 
 	l, err := net.Listen("tcp", host)
 	if err != nil {
@@ -87,12 +90,12 @@ func (s *Server) startGRPC(ch chan<- string) {
 		time.Sleep(500)
 		ch <- host
 	}()
-	if err := gs.Serve(l); nil != err {
+	if err := s.Serve(l); nil != err {
 		panic(err)
 	}
 }
 
-func (s *Server) startGateway(ch <-chan string) {
+func (ctl *controller) startGateway(ch <-chan string) {
 	ctx := context.Background()
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
@@ -108,16 +111,15 @@ func (s *Server) startGateway(ch <-chan string) {
 	gwmux := runtime.NewServeMux()
 	gRPCHost := <-ch
 
-	host := s.config.InsecureAddress
-	if err := pb.RegisterSimpleGRpcServiceHandlerFromEndpoint(ctx, gwmux, gRPCHost, dopts); err != nil {
-		fmt.Println("Register gRPC gateway failed.", err)
+	host := ctl.config.InsecureAddress
+	if err := pb.RegisterNpsWssServiceHandlerFromEndpoint(ctx, gwmux, gRPCHost, dopts); err != nil {
+		fmt.Println("Failed to init gRPC gateway. ", err)
 		return
 	}
+	ctl.serveWebsocket(mux)
 
-	mux.Handle("/api", gwmux)
+	mux.Handle("/", gwmux)
 	// serveSwagger(mux)
-	serveProm(mux)
-	s.serveWebPages(mux)
 
 	lstn, err := net.Listen("tcp", host)
 	if nil != err {
@@ -128,7 +130,7 @@ func (s *Server) startGateway(ch <-chan string) {
 	//	if err := http.ListenAndServe(host, allowCORS(mux)); nil != err {
 	//		fmt.Fprintf(os.Stderr, "Server died: %s\n", err)
 	//	}
-	gws := &http.Server{
+	s := &http.Server{
 		Handler: func /*allowCORS*/ (h http.Handler) http.Handler {
 			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				if origin := r.Header.Get("Origin"); origin != "" {
@@ -150,7 +152,20 @@ func (s *Server) startGateway(ch <-chan string) {
 		}(mux),
 	}
 
-	if err := gws.Serve(lstn); nil != err {
+	if err := s.Serve(lstn); nil != err {
 		fmt.Fprintln(os.Stderr, "Server died.", err.Error())
 	}
+}
+
+func serveSwagger(mux *http.ServeMux) {
+	mime.AddExtensionType(".svg", "image/svg+xml")
+
+	// Expose files in third_party/swagger-ui/ on <host>/swagger-ui
+	fileServer := http.FileServer(&assetfs.AssetFS{
+		Asset:    swagger.Asset,
+		AssetDir: swagger.AssetDir,
+		Prefix:   "third_party/swagger-ui",
+	})
+	prefix := "/swagger-ui/"
+	mux.Handle(prefix, http.StripPrefix(prefix, fileServer))
 }

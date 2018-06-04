@@ -7,10 +7,53 @@ Package pb is a generated protocol buffer package.
 It is generated from these files:
 	pb/service.proto
 	pb/datadef.proto
+	pb/meta.proto
+	pb/node.proto
+	pb/resource.proto
+	pb/runtime.proto
 
 It has these top-level messages:
 	ContactReqResp
+	AgentNode
+	AgentNodeSpec
+	AgentNodeStatus
+	DockerMachineStatus
+	OpenStackNodeStatus
+	PhysicalMachineStatus
 	Recipient
+	Duration
+	GroupVersionKind
+	Initializer
+	Initializers
+	LabelSelector
+	LabelSelectorRequirement
+	List
+	ListMeta
+	ListOptions
+	ObjectMeta
+	OwnerReference
+	Status
+	StatusCause
+	StatusDetails
+	Time
+	AttachedVolume
+	ConfigMapNodeConfigSource
+	ContainerImage
+	DaemonEndpoint
+	Node
+	NodeAddress
+	NodeCondition
+	NodeConfigSource
+	NodeConfigStatus
+	NodeDaemonEndpoints
+	NodeList
+	NodeSpec
+	NodeStatus
+	NodeSystemInfo
+	Taint
+	Quantity
+	RawExtension
+	TypeMeta
 */
 package pb
 

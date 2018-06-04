@@ -1,0 +1,357 @@
+syntax = "proto3";
+package pb;
+
+import "pb/meta.proto";
+import "pb/resource.proto";
+
+// Inspired by https://github.com/kubernetes/api/blob/master/core/v1/generated.proto#L82
+// AttachedVolume describes a volume attached to a node
+message AttachedVolume {
+  // Name of the attached volume
+  string name = 1;
+
+  // DevicePath represents the device path where the volume should be available
+  string devicePath = 2;
+}
+
+// Inspired by https://github.com/kubernetes/api/blob/master/core/v1/generated.proto#L442
+// ConfigMapNodeConfigSource contains the information to reference a ConfigMap as a config source for the Node.
+message ConfigMapNodeConfigSource {
+  // Namespace is the metadata.namespace of the referenced ConfigMap.
+  // This field is required in all cases.
+  string namespace = 1;
+
+  // Name is the metadata.name of the referenced ConfigMap.
+  // This field is required in all cases.
+  string name = 2;
+
+  // UID is the metadata.UID of the referenced ConfigMap.
+  // This field is forbidden in Node.Spec, and required in Node.Status.
+  // +optional
+  string uid = 3;
+
+  // ResourceVersion is the metadata.ResourceVersion of the referenced ConfigMap.
+  // This field is forbidden in Node.Spec, and required in Node.Status.
+  // +optional
+  string resourceVersion = 4;
+
+  // KubeletConfigKey declares which key of the referenced ConfigMap corresponds to the KubeletConfiguration structure
+  // This field is required in all cases.
+  string kubeletConfigKey = 5;
+}
+
+// Inspired by https://github.com/kubernetes/api/blob/master/core/v1/generated.proto#L690
+// Describe a container image
+message ContainerImage {
+  // Names by which this image is known.
+  // e.g. ["k8s.gcr.io/hyperkube:v1.0.7", "dockerhub.io/google_containers/hyperkube:v1.0.7"]
+  repeated string names = 1;
+
+  // The size of the image in bytes.
+  // +optional
+  int64 sizeBytes = 2;
+}
+
+// Inspired by https://github.com/kubernetes/api/blob/master/core/v1/generated.proto#L831
+// DaemonEndpoint contains information about a single Daemon endpoint.
+message DaemonEndpoint {
+  // Port number of the given endpoint.
+  int32 Port = 1;
+}
+
+// Inspred by https://github.com/kubernetes/api/blob/master/core/v1/generated.proto#L1763
+// Node is a worker node in Kubernetes.
+// Each node will have a unique identifier in the cache (i.e. in etcd).
+message Node {
+  // Standard object's metadata.
+  // More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#metadata
+  // +optional
+  // optional k8s.io.apimachinery.pkg.apis.meta.v1.ObjectMeta metadata = 1;
+  ListMeta metadata = 1;
+
+  // Spec defines the behavior of a node.
+  // https://git.k8s.io/community/contributors/devel/api-conventions.md#spec-and-status
+  // +optional
+  // optional NodeSpec spec = 2;
+  NodeSpec spec = 2;
+
+  // Most recently observed status of the node.
+  // Populated by the system.
+  // Read-only.
+  // More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#spec-and-status
+  // +optional
+  // optional NodeStatus status = 3;
+  NodeStatus status = 3;
+}
+
+// Inspired by https://github.com/kubernetes/api/blob/master/core/v1/generated.proto#L1784
+// NodeAddress contains information for the node's address.
+message NodeAddress {
+  // Node address type, one of Hostname, ExternalIP or InternalIP.
+  string type = 1;
+
+  // The node address.
+  string address = 2;
+}
+
+// Inspired by https://github.com/kubernetes/api/blob/master/core/v1/generated.proto#L1816
+// NodeCondition contains condition information for a node.
+message NodeCondition {
+  // Type of node condition.
+  string type = 1;
+
+  // Status of the condition, one of True, False, Unknown.
+  string status = 2;
+
+  // Last time we got an update on a given condition.
+  // +optional
+  // optional k8s.io.apimachinery.pkg.apis.meta.v1.Time lastHeartbeatTime = 3;
+  Time lastHeartbeatTime = 3;
+
+  // Last time the condition transit from one status to another.
+  // +optional
+  // optional k8s.io.apimachinery.pkg.apis.meta.v1.Time lastTransitionTime = 4;
+  Time lastTransitionTime = 4;
+
+  // (brief) reason for the condition's last transition.
+  // +optional
+  string reason = 5;
+
+  // Human readable message indicating details about last transition.
+  // +optional
+  string message = 6;
+}
+
+// Inspired by https://github.com/kubernetes/api/blob/master/core/v1/generated.proto#L1841
+// NodeConfigSource specifies a source of node configuration. Exactly one subfield (excluding metadata) must be non-nil.
+message NodeConfigSource {
+  // ConfigMap is a reference to a Node's ConfigMap
+  ConfigMapNodeConfigSource configMap = 2;
+}
+
+// Inspred by https://github.com/kubernetes/api/blob/master/core/v1/generated.proto#L1847
+// NodeConfigStatus describes the status of the config assigned by Node.Spec.ConfigSource.
+message NodeConfigStatus {
+  // Assigned reports the checkpointed config the node will try to use.
+  // When Node.Spec.ConfigSource is updated, the node checkpoints the associated
+  // config payload to local disk, along with a record indicating intended
+  // config. The node refers to this record to choose its config checkpoint, and
+  // reports this record in Assigned. Assigned only updates in the status after
+  // the record has been checkpointed to disk. When the Kubelet is restarted,
+  // it tries to make the Assigned config the Active config by loading and
+  // validating the checkpointed payload identified by Assigned.
+  // +optional
+  NodeConfigSource assigned = 1;
+
+  // Active reports the checkpointed config the node is actively using.
+  // Active will represent either the current version of the Assigned config,
+  // or the current LastKnownGood config, depending on whether attempting to use the
+  // Assigned config results in an error.
+  // +optional
+  NodeConfigSource active = 2;
+
+  // LastKnownGood reports the checkpointed config the node will fall back to
+  // when it encounters an error attempting to use the Assigned config.
+  // The Assigned config becomes the LastKnownGood config when the node determines
+  // that the Assigned config is stable and correct.
+  // This is currently implemented as a 10-minute soak period starting when the local
+  // record of Assigned config is updated. If the Assigned config is Active at the end
+  // of this period, it becomes the LastKnownGood. Note that if Spec.ConfigSource is
+  // reset to nil (use local defaults), the LastKnownGood is also immediately reset to nil,
+  // because the local default config is always assumed good.
+  // You should not make assumptions about the node's method of determining config stability
+  // and correctness, as this may change or become configurable in the future.
+  // +optional
+  NodeConfigSource lastKnownGood = 3;
+
+  // Error describes any problems reconciling the Spec.ConfigSource to the Active config.
+  // Errors may occur, for example, attempting to checkpoint Spec.ConfigSource to the local Assigned
+  // record, attempting to checkpoint the payload associated with Spec.ConfigSource, attempting
+  // to load or validate the Assigned config, etc.
+  // Errors may occur at different points while syncing config. Earlier errors (e.g. download or
+  // checkpointing errors) will not result in a rollback to LastKnownGood, and may resolve across
+  // Kubelet retries. Later errors (e.g. loading or validating a checkpointed config) will result in
+  // a rollback to LastKnownGood. In the latter case, it is usually possible to resolve the error
+  // by fixing the config assigned in Spec.ConfigSource.
+  // You can find additional information for debugging by searching the error message in the Kubelet log.
+  // Error is a human-readable description of the error state; machines can check whether or not Error
+  // is empty, but should not rely on the stability of the Error text across Kubelet versions.
+  // +optional
+  string error = 4;
+}
+
+// Inspired by https://github.com/kubernetes/api/blob/master/core/v1/generated.proto#L1897
+// NodeDaemonEndpoints lists ports opened by daemons running on the Node.
+message NodeDaemonEndpoints {
+  // Endpoint on which Kubelet is listening.
+  // +optional
+  DaemonEndpoint kubeletEndpoint = 1;
+}
+
+// Inspired by https://github.com/kubernetes/api/blob/master/core/v1/generated.proto#L1904
+// NodeList is the whole list of all Nodes which have been registered with master.
+// message NodeList {
+message NodeList {
+  // Standard list metadata.
+  // More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds
+  // +optional
+  // optional k8s.io.apimachinery.pkg.apis.meta.v1.ListMeta metadata = 1;
+  ListMeta metadata = 1;
+
+  // List of nodes
+  repeated Node items = 2;
+}
+
+// Inspred by https://github.com/kubernetes/api/blob/master/core/v1/generated.proto#L1968
+// NodeSpec describes the attributes that a node is created with.
+message NodeSpec {
+  // PodCIDR represents the pod IP range assigned to the node.
+  // +optional
+  string podCIDR = 1;
+
+  // ID of the node assigned by the cloud provider in the format: <ProviderName>://<ProviderSpecificNodeID>
+  // +optional
+  string providerID = 3;
+
+  // Unschedulable controls node schedulability of new pods. By default, node is schedulable.
+  // More info: https://kubernetes.io/docs/concepts/nodes/node/#manual-node-administration
+  // +optional
+  bool unschedulable = 4;
+
+  // If specified, the node's taints.
+  // +optional
+  repeated Taint taints = 5;
+
+  // If specified, the source to get node configuration from
+  // The DynamicKubeletConfig feature gate must be enabled for the Kubelet to use this field
+  // +optional
+  NodeConfigSource configSource = 6;
+
+  // Deprecated. Not all kubelets will set this field. Remove field after 1.13.
+  // see: https://issues.k8s.io/61966
+  // +optional
+  string externalID = 2;
+}
+
+// Inspired by https://github.com/kubernetes/api/blob/master/core/v1/generated.proto#L1998
+// NodeStatus is information about the current status of a node.
+message NodeStatus {
+  // Capacity represents the total resources of a node.
+  // More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#capacity
+  // +optional
+  // map<string, k8s.io.apimachinery.pkg.api.resource.Quantity> capacity = 1;
+  map<string, Quantity> capacity = 1;
+
+  // Allocatable represents the resources of a node that are available for scheduling.
+  // Defaults to Capacity.
+  // +optional
+  // map<string, k8s.io.apimachinery.pkg.api.resource.Quantity> allocatable = 2;
+  map<string, Quantity> allocatable = 2;
+
+  // NodePhase is the recently observed lifecycle phase of the node.
+  // More info: https://kubernetes.io/docs/concepts/nodes/node/#phase
+  // The field is never populated, and now is deprecated.
+  // +optional
+  string phase = 3;
+
+  // Conditions is an array of current observed node conditions.
+  // More info: https://kubernetes.io/docs/concepts/nodes/node/#condition
+  // +optional
+  // +patchMergeKey=type
+  // +patchStrategy=merge
+  repeated NodeCondition conditions = 4;
+
+  // List of addresses reachable to the node.
+  // Queried from cloud provider, if available.
+  // More info: https://kubernetes.io/docs/concepts/nodes/node/#addresses
+  // +optional
+  // +patchMergeKey=type
+  // +patchStrategy=merge
+  repeated NodeAddress addresses = 5;
+
+  // Endpoints of daemons running on the Node.
+  // +optional
+  NodeDaemonEndpoints daemonEndpoints = 6;
+
+  // Set of ids/uuids to uniquely identify the node.
+  // More info: https://kubernetes.io/docs/concepts/nodes/node/#info
+  // +optional
+  NodeSystemInfo nodeInfo = 7;
+
+  // List of container images on this node
+  // +optional
+  repeated ContainerImage images = 8;
+
+  // List of attachable volumes in use (mounted) by the node.
+  // +optional
+  repeated string volumesInUse = 9;
+
+  // List of volumes that are attached to the node.
+  // +optional
+  repeated AttachedVolume volumesAttached = 10;
+
+  // Status of the config assigned to the node via the dynamic Kubelet config feature.
+  // +optional
+  NodeConfigStatus config = 11;
+}
+
+// Inspired by https://github.com/kubernetes/api/blob/master/core/v1/generated.proto#L2057
+// NodeSystemInfo is a set of ids/uuids to uniquely identify the node.
+message NodeSystemInfo {
+  // MachineID reported by the node. For unique machine identification
+  // in the cluster this field is preferred. Learn more from man(5)
+  // machine-id: http://man7.org/linux/man-pages/man5/machine-id.5.html
+  string machineID = 1;
+
+  // SystemUUID reported by the node. For unique machine identification
+  // MachineID is preferred. This field is specific to Red Hat hosts
+  // https://access.redhat.com/documentation/en-US/Red_Hat_Subscription_Management/1/html/RHSM/getting-system-uuid.html
+  string systemUUID = 2;
+
+  // Boot ID reported by the node.
+  string bootID = 3;
+
+  // Kernel Version reported by the node from 'uname -r' (e.g. 3.16.0-0.bpo.4-amd64).
+  string kernelVersion = 4;
+
+  // OS Image reported by the node from /etc/os-release (e.g. Debian GNU/Linux 7 (wheezy)).
+  string osImage = 5;
+
+  // ContainerRuntime Version reported by the node through runtime remote API (e.g. docker://1.5.0).
+  string containerRuntimeVersion = 6;
+
+  // Kubelet Version reported by the node.
+  string kubeletVersion = 7;
+
+  // KubeProxy Version reported by the node.
+  string kubeProxyVersion = 8;
+
+  // The Operating System reported by the node
+  string operatingSystem = 9;
+
+  // The Architecture reported by the node
+  string architecture = 10;
+}
+
+// Inspired by https://github.com/kubernetes/api/blob/master/core/v1/generated.proto#L4289
+// The node this Taint is attached to has the "effect" on
+// any pod that does not tolerate the Taint.
+message Taint {
+  // Required. The taint key to be applied to a node.
+  string key = 1;
+
+  // Required. The taint value corresponding to the taint key.
+  // +optional
+  string value = 2;
+
+  // Required. The effect of the taint on pods
+  // that do not tolerate the taint.
+  // Valid effects are NoSchedule, PreferNoSchedule and NoExecute.
+  string effect = 3;
+
+  // TimeAdded represents the time at which the taint was added.
+  // It is only written for NoExecute taints.
+  // +optional
+  // optional k8s.io.apimachinery.pkg.apis.meta.v1.Time timeAdded = 4;
+  Time timeAdded = 4;
+}
